@@ -106,6 +106,7 @@ app.get('/status', (req: Request, res: Response) => {
 
 // Primary Chat Endpoint
 app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+    const startTime = Date.now();
     const { sessionId, messageText, action = 'chat', fromMessageId, fromMessageIndex, user_heartbeat = 75 } = req.body;
 
     if (!sessionId) {
@@ -238,6 +239,8 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         (sessionData as any).recent_summary = recentSummary;
 
         const historyStr = formatChatHistory(historyMessages, sessionData.user_character?.name || "User", sessionData.character?.name || "Character");
+        const supabaseTime = Date.now();
+        console.log(`[Timer] Phase 1 - Supabase data fetch & traits consolidation: ${((supabaseTime - startTime) / 1000).toFixed(3)}s`);
 
         // 3. Build prompt securely on backend
         let fullPrompt = constructFinalPrompt(
@@ -258,6 +261,8 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         const safeUvcName = sessionData.user_character?.name || "User";
         const safeCharName = sessionData.character?.name || "Character";
         fullPrompt = fullPrompt.replace(/{{user}}/gi, safeUvcName).replace(/{{character}}/gi, safeCharName).replace(/{{char}}/gi, safeCharName);
+        const promptTime = Date.now();
+        console.log(`[Timer] Phase 2 - Prompt builder: ${((promptTime - supabaseTime) / 1000).toFixed(3)}s`);
 
         // 4. Initialize Vertex AI Streaming Connection
         console.log("[Vertex AI] Invoking gemini-3.5-flash...");
@@ -265,6 +270,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
             contents: [{ role: 'user', parts: [{ text: fullPrompt }] }]
         };
 
+        const startVertexCall = Date.now();
         const streamingResp = await generativeModel.generateContentStream(request);
 
         // Configure SSE Streaming Headers
@@ -273,11 +279,17 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         res.setHeader('Connection', 'keep-alive');
 
         let fullGeneratedText = "";
+        let isFirstToken = true;
 
         // Stream parts word-by-word to client
         for await (const chunk of streamingResp.stream) {
             const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text || "";
             if (text) {
+                if (isFirstToken) {
+                    isFirstToken = false;
+                    const firstTokenTime = Date.now();
+                    console.log(`[Timer] Phase 3 - Time to First Token (TTFT): ${((firstTokenTime - startTime) / 1000).toFixed(3)}s (Vertex latency: ${((firstTokenTime - startVertexCall) / 1000).toFixed(3)}s)`);
+                }
                 fullGeneratedText += text;
                 res.write(`data: ${JSON.stringify({ text, isStreaming: true, accumulated: null })}\n\n`);
             }
@@ -286,7 +298,8 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         // Close stream
         res.write(`data: ${JSON.stringify({ text: "", isStreaming: false, isComplete: true })}\n\n`);
 
-        console.log(`[Vertex AI] Done. Output Length: ${fullGeneratedText.length}`);
+        const totalTime = Date.now();
+        console.log(`[Timer] Phase 4 - Full response generated. Vertex stream duration: ${((totalTime - startVertexCall) / 1000).toFixed(3)}s. Total request duration: ${((totalTime - startTime) / 1000).toFixed(3)}s. Output Length: ${fullGeneratedText.length} chars.`);
 
         // 5. Parse output and commit to Supabase on backend
         const parsed = parseXMLOutput(fullGeneratedText);
