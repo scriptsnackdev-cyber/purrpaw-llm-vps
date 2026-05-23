@@ -1,12 +1,16 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import ws from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import { VertexAI } from '@google-cloud/vertexai';
 import { constructFinalPrompt, formatChatHistory } from './prompt_builder.js';
 import { parseXMLOutput } from './xml_parser.js';
 import { resolveFallbackState } from './state_management.js';
 import { ChatMessage, SessionData } from './types.js';
+
+// Fix missing native WebSocket in Node.js < 22 for Supabase Client
+globalThis.WebSocket = ws as any;
 
 dotenv.config();
 
