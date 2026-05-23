@@ -110,6 +110,7 @@ export const resolveFallbackState = (currentJson: any, history: ChatMessage[]) =
         personality_traits: resolved.personality_traits,
         scene_detail: resolved.scene_detail || null,
         mobile_updates: resolved.mobile_updates || {},
+        long_memories: currentJson?.long_memories || [],
         usageMetadata: null
     };
 };
