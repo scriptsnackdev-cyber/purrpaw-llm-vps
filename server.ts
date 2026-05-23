@@ -15,7 +15,21 @@ globalThis.WebSocket = ws as any;
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Custom CORS and Private Network Access (PNA) Middleware
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, Origin, X-Requested-With");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Private-Network", "true"); // Fix Chrome PNA Block
+
+    if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+    }
+    next();
+});
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
@@ -184,7 +198,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
                             }
                         }
                     }
-                } catch {}
+                } catch { }
             }
         }
         const memoryNotes = Array.from(consolidatedMemories.entries()).map(([title, content]) => ({ title, content }));
