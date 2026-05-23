@@ -266,7 +266,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
 
         // 4. Initialize Vertex AI Streaming Connection
         console.log("[Vertex AI] Invoking gemini-3.5-flash...");
-        const request = {
+        const request: any = {
             contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
             safetySettings: [
                 {
