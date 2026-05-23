@@ -267,7 +267,25 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         // 4. Initialize Vertex AI Streaming Connection
         console.log("[Vertex AI] Invoking gemini-3.5-flash...");
         const request = {
-            contents: [{ role: 'user', parts: [{ text: fullPrompt }] }]
+            contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+            safetySettings: [
+                {
+                    category: 'HARM_CATEGORY_HARASSMENT',
+                    threshold: 'BLOCK_NONE'
+                },
+                {
+                    category: 'HARM_CATEGORY_HATE_SPEECH',
+                    threshold: 'BLOCK_NONE'
+                },
+                {
+                    category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                    threshold: 'BLOCK_NONE'
+                },
+                {
+                    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                    threshold: 'BLOCK_NONE'
+                }
+            ]
         };
 
         const startVertexCall = Date.now();
