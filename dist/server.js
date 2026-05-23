@@ -55,23 +55,23 @@ const vertexAI = new VertexAI(vertexAiOptions);
 const sharedSafetySettings = [
     {
         category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_NONE'
+        threshold: 'BLOCK_ONLY_HIGH'
     },
     {
         category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_NONE'
+        threshold: 'BLOCK_ONLY_HIGH'
     },
     {
         category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_NONE'
+        threshold: 'BLOCK_ONLY_HIGH'
     },
     {
         category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE'
+        threshold: 'BLOCK_ONLY_HIGH'
     }
 ];
 const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-3.5-flash',
+    model: 'gemini-3-flash-preview',
     safetySettings: sharedSafetySettings
 });
 // Middleware: Authenticate requests using Supabase JWT
@@ -98,7 +98,7 @@ const authenticateJWT = async (req, res, next) => {
 };
 // Expose root status check
 app.get('/status', (req, res) => {
-    res.json({ status: 'running', service: 'purrpaw-llm-vps', model: 'gemini-3.5-flash' });
+    res.json({ status: 'running', service: 'purrpaw-llm-vps', model: 'gemini-3-flash-preview' });
 });
 // Primary Chat Endpoint
 app.post('/chat', authenticateJWT, async (req, res) => {
@@ -351,5 +351,5 @@ app.post('/chat', authenticateJWT, async (req, res) => {
 // Run server
 app.listen(PORT, () => {
     console.log(`[VPS Server] purrpaw-llm-vps is running on port ${PORT}`);
-    console.log(`[VPS Server] Active Vertex AI model: gemini-3.5-flash`);
+    console.log(`[VPS Server] Active Vertex AI model: gemini-3-flash-preview`);
 });
