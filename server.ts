@@ -320,7 +320,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         res.end();
 
     } catch (err: any) {
-        console.error("[API] Critical Failure:", err.message);
+        console.error("[API] Critical Failure:", err);
         // If SSE already started, send SSE error
         if (res.headersSent) {
             res.write(`event: error\ndata: ${JSON.stringify({ message: err.message })}\n\n`);
