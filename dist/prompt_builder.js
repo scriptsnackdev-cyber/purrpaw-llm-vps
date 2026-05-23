@@ -40,7 +40,7 @@ export const buildSystemPrompt = () => {
     prompt += `<response>\n`;
     prompt += `<reply>\n(ONLY THIS CONTENT WILL BE SHOWN TO THE USER)\n- Absolute Rule: Every response within <reply> MUST strictly follow the block sequence and formatting defined in the [PERSONA] (e.g., Header, Narration, Status, etc.).\n- Use <a> for narration/environment, <q> for dialogue, and <h> for sound effects/vocalizations.\n- Proactively introduce twists or new plot points to ensure the story evolves every turn.\n</reply>\n`;
     prompt += `<emo>Dominant emotion (Thai word only)</emo>\n`;
-    prompt += `<pt>opn:val csn:val ext:val agr:val neu:val sex:val pos:val cnf:val</pt> (Personality traits values/deltas, e.g., opn:75 csn:+5)\n`;
+    prompt += `<pt>opn:val csn:val ext:val agr:val neu:val pas:val pos:val cnf:val</pt> (Personality traits values/deltas, e.g., opn:75 csn:+5)\n`;
     prompt += `<hb>BPM (Heartbeat)</hb>\n`;
     prompt += `<img_url>If [PERSONA] or context has instructions to show a specific image URL, extract and put that URL here. Otherwise leave empty.</img_url>\n`;
     prompt += `<sum>Who/What/Where/How of the latest turn (for continuity). MUST BE EXTREMELY CONCISE, MAX 1 SENTENCE.</sum>\n`;
@@ -92,7 +92,7 @@ export const buildCharEmoPrompt = (orderedMessages = []) => {
     prompt += `Heartrate: ${heartbeatVal} BPM\n`;
     if (currentState?.personality_traits) {
         const pt = currentState.personality_traits;
-        prompt += `Personality Traits: opn:${pt.openness} csn:${pt.conscientiousness} ext:${pt.extraversion} agr:${pt.agreeableness} neu:${pt.neuroticism} sex:${pt.sexual_arousal} pos:${pt.possessiveness} cnf:${pt.confidence}\n`;
+        prompt += `Personality Traits: opn:${pt.openness} csn:${pt.conscientiousness} ext:${pt.extraversion} agr:${pt.agreeableness} neu:${pt.neuroticism} pas:${pt.sexual_arousal} pos:${pt.possessiveness} cnf:${pt.confidence}\n`;
     }
     prompt += `</CHAR_EMO>`;
     return prompt;

@@ -94,7 +94,7 @@ export const parseXMLOutput = (responseText) => {
         const ptBlock = extractTag('pt', responseText);
         let personalityTraits = null;
         if (ptBlock) {
-            const rawPt = parseKeyValPT(ptBlock) || parseNestedXML(ptBlock, ['opn', 'csn', 'ext', 'agr', 'neu', 'sex', 'pos', 'cnf']);
+            const rawPt = parseKeyValPT(ptBlock) || parseNestedXML(ptBlock, ['opn', 'csn', 'ext', 'agr', 'neu', 'sex', 'pas', 'pos', 'cnf']);
             if (rawPt) {
                 personalityTraits = {
                     openness: rawPt.opn !== undefined ? rawPt.opn : rawPt.openness,
@@ -102,7 +102,7 @@ export const parseXMLOutput = (responseText) => {
                     extraversion: rawPt.ext !== undefined ? rawPt.ext : rawPt.extraversion,
                     agreeableness: rawPt.agr !== undefined ? rawPt.agr : rawPt.agreeableness,
                     neuroticism: rawPt.neu !== undefined ? rawPt.neu : rawPt.neuroticism,
-                    sexual_arousal: rawPt.sex !== undefined ? rawPt.sex : rawPt.sexual_arousal,
+                    sexual_arousal: rawPt.pas !== undefined ? rawPt.pas : (rawPt.sex !== undefined ? rawPt.sex : rawPt.sexual_arousal),
                     possessiveness: rawPt.pos !== undefined ? rawPt.pos : rawPt.possessiveness,
                     confidence: rawPt.cnf !== undefined ? rawPt.cnf : rawPt.confidence
                 };
