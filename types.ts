@@ -3,8 +3,6 @@ export interface ChatMessage {
     role: 'user' | 'assistant' | 'character' | 'system';
     message_data?: any;
     message_index?: number;
-    raw_text?: string;
-    raw_text_json?: any;
 }
 
 export interface SessionData {

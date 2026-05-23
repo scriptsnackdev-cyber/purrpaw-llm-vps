@@ -55,9 +55,9 @@ export const resolveFallbackState = (currentJson: any, history: ChatMessage[]) =
     const keysToMerge = ['personality_traits', 'summary', 'image_url', 'scene_detail'];
     let baseState: any = {};
     for (const msg of [...history].reverse()) {
-        if ((msg.role !== 'assistant' && msg.role !== 'character') || !msg.raw_text_json) continue;
+        if ((msg.role !== 'assistant' && msg.role !== 'character') || !msg.message_data) continue;
         try {
-            const prevData = typeof msg.raw_text_json === 'string' ? JSON.parse(msg.raw_text_json) : msg.raw_text_json;
+            const prevData = typeof msg.message_data === 'string' ? JSON.parse(msg.message_data) : msg.message_data;
             keysToMerge.forEach(key => {
                 if ((baseState[key] === undefined || baseState[key] === null) && prevData[key]) {
                     baseState[key] = prevData[key];

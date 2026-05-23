@@ -130,7 +130,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         // 2. Fetch Chat History securely on backend
         let query = supabaseAdmin
             .from("chat_messages")
-            .select("id, role, message_data, message_index, raw_text, raw_text_json")
+            .select("id, role, message_data, message_index")
             .eq("session_id", sessionId)
             .neq("is_active_response", false)
             .order("message_index", { ascending: false });
