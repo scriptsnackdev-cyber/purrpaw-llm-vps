@@ -260,10 +260,17 @@ app.post('/chat', authenticateJWT, async (req, res) => {
             if (finishReason && finishReason !== 'STOP' && finishReason !== 'MAX_TOKENS') {
                 if (finishReason === 'SAFETY') {
                     console.warn(`[Vertex AI] Safety block triggered! Ratings:`, JSON.stringify(candidate.safetyRatings));
+                    if (fullGeneratedText.length > 0) {
+                        console.warn(`[Vertex AI] Safety block triggered mid-generation. Saving partial response of ${fullGeneratedText.length} chars.`);
+                        break;
+                    }
                     throw new Error("SAFETY_BLOCK: ขออภัยด้วยน้า คำตอบถูกบล็อกเนื่องจากนโยบายความปลอดภัย (Safety Filter)");
                 }
                 else {
                     console.warn(`[Vertex AI] Stream terminated with reason: ${finishReason}`);
+                    if (fullGeneratedText.length > 0) {
+                        break;
+                    }
                     throw new Error(`STREAM_BLOCKED: Stream terminated with reason: ${finishReason}`);
                 }
             }
@@ -288,6 +295,15 @@ app.post('/chat', authenticateJWT, async (req, res) => {
         res.write(`data: ${JSON.stringify({ text: "", isStreaming: false, isComplete: true })}\n\n`);
         const totalTime = Date.now();
         console.log(`[Timer] Phase 4 - Full response generated. Vertex stream duration: ${((totalTime - startVertexCall) / 1000).toFixed(3)}s. Total request duration: ${((totalTime - startTime) / 1000).toFixed(3)}s. Output Length: ${fullGeneratedText.length} chars.`);
+        // Force close unclosed XML tags if stream was cut off mid-generation
+        if (fullGeneratedText.length > 0) {
+            if (fullGeneratedText.includes('<response>') && !fullGeneratedText.includes('</response>')) {
+                if (fullGeneratedText.includes('<reply>') && !fullGeneratedText.includes('</reply>')) {
+                    fullGeneratedText += "\n</reply>";
+                }
+                fullGeneratedText += "\n</response>";
+            }
+        }
         // 5. Parse output and commit to Supabase on backend
         const parsed = parseXMLOutput(fullGeneratedText);
         parsed.rawJson = resolveFallbackState(parsed.rawJson, orderedMessages);
