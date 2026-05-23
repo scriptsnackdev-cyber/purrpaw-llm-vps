@@ -24,10 +24,11 @@ app.use((req, res, next) => {
     } else {
         res.header("Access-Control-Allow-Origin", "*");
     }
-    res.header("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept, Origin, X-Requested-With");
+    res.header("Access-Control-Allow-Headers", "Authorization, authorization, Content-Type, content-type, Accept, accept, Origin, origin, X-Requested-With, x-requested-with");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
     res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Private-Network", "true"); // Fix Chrome PNA Block
+    res.header("Access-Control-Allow-Private-Network", "true");
+    res.header("Access-Control-Max-Age", "86400"); // Cache preflight for 24h
 
     if (req.method === "OPTIONS") {
         return res.sendStatus(200);
@@ -70,9 +71,9 @@ interface AuthenticatedRequest extends Request {
 // Middleware: Authenticate requests using Supabase JWT
 const authenticateJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const authHeader = req.headers.authorization;
+        const authHeader = req.header('Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            console.warn("[Auth] Rejecting request: Missing or invalid Authorization header");
+            console.warn(`[Auth] Rejecting request: Missing or invalid Authorization header. Header value: "${authHeader}"`);
             return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
         }
 
@@ -80,7 +81,7 @@ const authenticateJWT = async (req: AuthenticatedRequest, res: Response, next: N
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
         if (error || !user) {
-            console.warn("[Auth] Rejecting request: Invalid JWT token");
+            console.warn(`[Auth] Rejecting request: Invalid JWT token. Error details: "${error?.message || 'No user session found'}"`);
             return res.status(401).json({ error: 'Unauthorized: Invalid token' });
         }
 
