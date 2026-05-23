@@ -69,19 +69,19 @@ const vertexAI = new VertexAI(vertexAiOptions);
 const sharedSafetySettings = [
     {
         category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_ONLY_HIGH'
+        threshold: 'BLOCK_NONE'
     },
     {
         category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_ONLY_HIGH'
+        threshold: 'BLOCK_NONE'
     },
     {
         category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_ONLY_HIGH'
+        threshold: 'BLOCK_NONE'
     },
     {
         category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_ONLY_HIGH'
+        threshold: 'BLOCK_NONE'
     }
 ];
 
@@ -289,24 +289,7 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
         console.log("[Vertex AI] Invoking gemini-3.5-flash...");
         const request: any = {
             contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-            safetySettings: [
-                {
-                    category: 'HARM_CATEGORY_HARASSMENT',
-                    threshold: 'BLOCK_ONLY_HIGH'
-                },
-                {
-                    category: 'HARM_CATEGORY_HATE_SPEECH',
-                    threshold: 'BLOCK_ONLY_HIGH'
-                },
-                {
-                    category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                    threshold: 'BLOCK_ONLY_HIGH'
-                },
-                {
-                    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                    threshold: 'BLOCK_ONLY_HIGH'
-                }
-            ]
+            safetySettings: sharedSafetySettings
         };
 
         const startVertexCall = Date.now();
@@ -328,7 +311,19 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
                 console.log(`[Vertex AI Chunk #${chunkCount}]:`, JSON.stringify(chunk));
             }
 
-            const parts = chunk.candidates?.[0]?.content?.parts || [];
+            const candidate = chunk.candidates?.[0];
+            const finishReason = candidate?.finishReason;
+            if (finishReason && finishReason !== 'STOP' && finishReason !== 'MAX_TOKENS') {
+                if (finishReason === 'SAFETY') {
+                    console.warn(`[Vertex AI] Safety block triggered! Ratings:`, JSON.stringify(candidate.safetyRatings));
+                    throw new Error("SAFETY_BLOCK: ขออภัยด้วยน้า คำตอบถูกบล็อกเนื่องจากนโยบายความปลอดภัย (Safety Filter)");
+                } else {
+                    console.warn(`[Vertex AI] Stream terminated with reason: ${finishReason}`);
+                    throw new Error(`STREAM_BLOCKED: Stream terminated with reason: ${finishReason}`);
+                }
+            }
+
+            const parts = candidate?.content?.parts || [];
             let text = "";
             for (const part of parts) {
                 if (part.text) {
