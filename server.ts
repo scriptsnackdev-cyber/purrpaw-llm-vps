@@ -54,11 +54,17 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Initialize Vertex AI
-const vertexAI = new VertexAI({
+// Initialize Vertex AI with dynamic global endpoint support
+const vertexAiOptions: any = {
     project: GCP_PROJECT || '',
-    location: GCP_LOCATION
-});
+    location: GCP_LOCATION || 'us-central1'
+};
+
+if (GCP_LOCATION === 'global') {
+    vertexAiOptions.apiEndpoint = 'aiplatform.googleapis.com';
+}
+
+const vertexAI = new VertexAI(vertexAiOptions);
 const generativeModel = vertexAI.getGenerativeModel({
     model: 'gemini-3.5-flash',
 });
