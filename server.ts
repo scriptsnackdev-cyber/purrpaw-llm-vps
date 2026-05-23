@@ -280,10 +280,23 @@ app.post('/chat', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
 
         let fullGeneratedText = "";
         let isFirstToken = true;
+        let chunkCount = 0;
 
         // Stream parts word-by-word to client
         for await (const chunk of streamingResp.stream) {
-            const text = chunk.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            chunkCount++;
+            if (chunkCount <= 5) {
+                console.log(`[Vertex AI Chunk #${chunkCount}]:`, JSON.stringify(chunk));
+            }
+
+            const parts = chunk.candidates?.[0]?.content?.parts || [];
+            let text = "";
+            for (const part of parts) {
+                if (part.text) {
+                    text += part.text;
+                }
+            }
+
             if (text) {
                 if (isFirstToken) {
                     isFirstToken = false;
